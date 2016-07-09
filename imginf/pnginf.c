@@ -19,14 +19,12 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include "pnginf.h"
+#include "imginf.h"
 
 
 static const unsigned char png_sig[] = {
     0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'
 };
-
-static int g_verbose;
 
 static struct {
 
@@ -41,18 +39,6 @@ static struct {
     unsigned char ppu_spec;
 
 } pnginf;
-
-
-
-
-/*
- *  str_to_dword(buf) - Convert 4 bytes in buf to unsigned int
- */
-
-static __inline__ unsigned int str_to_dword(const unsigned char *buf)
-{
-    return buf[3] | buf[2]<<8 | buf[1]<<16 | buf[0]<<24;
-}
 
 
 
@@ -76,8 +62,8 @@ static int read_ihdr(FILE *fp, int clen)
     if (fread(buf, 1, 13, fp) != 13)
         return 0;
 
-    pnginf.width = str_to_dword(buf);
-    pnginf.height = str_to_dword(buf + 4);
+    pnginf.width = str_to_dword(buf, 0);
+    pnginf.height = str_to_dword(buf + 4, 0);
     pnginf.depth = buf[8];
     pnginf.colortype = buf[9];
 
@@ -125,8 +111,8 @@ static int read_phys(FILE *fp, int clen)
     if (fread(buf, 1, 9, fp) != 9)
         return 0;
 
-    pnginf.ppu_x = str_to_dword(buf);
-    pnginf.ppu_y = str_to_dword(buf + 4);
+    pnginf.ppu_x = str_to_dword(buf, 0);
+    pnginf.ppu_y = str_to_dword(buf + 4, 0);
     pnginf.ppu_spec = buf[8];
 
     if (pnginf.ppu_spec)
@@ -260,7 +246,7 @@ static int read_chunk(FILE *fp)
     if (fread(buf, 1, 8, fp) != 8)
         return -1;
 
-    chunklen = str_to_dword(buf);
+    chunklen = str_to_dword(buf, 0);
     if (chunklen > INT_MAX)
         return -1;
 
@@ -309,16 +295,8 @@ static int read_chunk(FILE *fp)
 
     /* Read the CRC if handled or skip forward... */
 
-    if (i <= sizeof(buf))
-    {
-        if (fread(buf, 1, i, fp) != i)
-            return -1;
-    }
-    else
-    {
-        if (fseek(fp, i, SEEK_CUR) != 0)
-            return -1;
-    }
+    if (!fp_move_forward(fp, i))
+        return -1;
 
     return 1;
 }
@@ -337,13 +315,11 @@ static int read_chunk(FILE *fp)
  *           3 if a PNG file but corrupt
  */
 
-int process_image_png(const char *fname, int isverbose)
+int process_image_png(const char *fname)
 {
     unsigned char pngheader[8];
     FILE *fp;
     int ret, i;
-
-    g_verbose = isverbose;
 
     if (g_verbose)
         printf("[ %s ]\n\n", fname);

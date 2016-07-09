@@ -16,15 +16,21 @@
 #include <string.h>
 #include <strings.h>
 
+#ifndef _WIN32
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #include <dirent.h>
+  #include <unistd.h>
+#endif
+
 #include "ggetopt.h"
-#include "pnginf.h"
-#include "jpginf.h"
+#include "imginf.h"
 
 
 int _CRT_glob = 0;  /* Mingw glob expands argv[] by default */
 
 
-static int g_verbose;
+int g_verbose;
 
 
 void status_line(const char *fname, int status)
@@ -56,6 +62,8 @@ void status_header(void)
 
 
 
+
+#ifdef _WIN32
 
 void process_img_all(void)
 {
@@ -93,7 +101,7 @@ void process_img_all(void)
             if (nfiles++ == 0 && !g_verbose)
                 status_header();
 
-            ret = process_image_png(finddata.cFileName, g_verbose);
+            ret = process_image_png(finddata.cFileName);
             if (!g_verbose && ret)
                 status_line(finddata.cFileName, ret);
         }
@@ -103,7 +111,7 @@ void process_img_all(void)
             if (nfiles++ == 0 && !g_verbose)
                 status_header();
 
-            ret = process_image_jpg(finddata.cFileName, g_verbose);
+            ret = process_image_jpg(finddata.cFileName);
             if (!g_verbose && ret)
                 status_line(finddata.cFileName, ret);
         }
@@ -115,6 +123,70 @@ void process_img_all(void)
     if (nfiles == 0)
         printf("No files found\n");
 }
+
+#else
+
+void process_img_all(void)
+{
+    DIR *dp;
+    struct dirent *dentp;
+    struct stat sb;
+    int len, ret, nfiles = 0;
+    char *ext;
+
+    if ((dp = opendir(".")) == NULL)
+    {
+        printf("Access denied to current directory!\n");
+        return;
+    }
+
+    while ((dentp = readdir(dp)) != NULL)
+    {
+        if (strcmp(dentp->d_name, ".") == 0 ||
+            strcmp(dentp->d_name, "..") == 0)
+            continue;
+
+        if (stat(dentp->d_name, &sb) != 0 || !S_ISREG(sb.st_mode))
+            continue;
+
+        len = strlen(dentp->d_name);
+        if (len < 5)
+            continue;
+
+        if (len >= 5 && dentp->d_name[len - 4] == '.')
+            ext = &dentp->d_name[len - 3];
+        else if (len >= 6 && dentp->d_name[len - 5] == '.')
+            ext = &dentp->d_name[len - 4];
+        else
+            continue;
+
+        if (strcasecmp(ext, "png") == 0)
+        {
+            if (nfiles++ == 0 && !g_verbose)
+                status_header();
+
+            ret = process_image_png(dentp->d_name);
+            if (!g_verbose && ret)
+                status_line(dentp->d_name, ret);
+        }
+        else if (strcasecmp(ext, "jpg") == 0 ||
+                 strcasecmp(ext, "jpeg") == 0)
+        {
+            if (nfiles++ == 0 && !g_verbose)
+                status_header();
+
+            ret = process_image_jpg(dentp->d_name);
+            if (!g_verbose && ret)
+                status_line(dentp->d_name, ret);
+        }
+
+    }
+
+    if (nfiles == 0)
+        printf("No files found\n");
+}
+
+#endif  /* !_WIN32 */
 
 
 
@@ -234,13 +306,13 @@ int main(int argc, char **argv)
 
         if (ret == 1)
         {
-            ret = process_image_png(argv[i], g_verbose);
+            ret = process_image_png(argv[i]);
             if (!g_verbose && ret)
                 status_line(argv[i], ret);
         }
         else if (ret == 2)
         {
-            ret = process_image_jpg(argv[i], g_verbose);
+            ret = process_image_jpg(argv[i]);
             if (!g_verbose && ret)
                 status_line(argv[i], ret);
         }

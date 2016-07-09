@@ -1,13 +1,11 @@
 # imginf
 
 This dumps out jpeg and png image information in either a summary
-basis or a detailed basis. Currently I've been too lazy to port
-this properly to Unix so it sort of only works on Windows.
+basis or a detailed basis.
 
-pnginf is pretty brief but jpginf dumps out lots of exif information if it's
-there.
+pnginf is pretty brief but jpginf dumps out lots of exif and gps information
+if it's there.
 
-Compile with:
-
-gcc -Wall -O2 -mconsole -o imginf.exe imginf.c pnginf.c jpginf.c ggetopt.c
+On either Windows or Unix type make to compile. The windows version does
+assume the use of mingw and that gcc is in your path already.
 
