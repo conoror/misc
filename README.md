@@ -8,3 +8,7 @@ Clz uses callbacks to put and get data so it should be fairly flexible.
 
 imginf dumps out png and jpg information including Exif and GPS information
 if present. A summary mode lists resolution and dpi for each file.
+
+wupatch is a Windows batch file to pull certain Update patches that
+then cause Windows update to speed up by several orders of magnitude.
+Yes, really.
