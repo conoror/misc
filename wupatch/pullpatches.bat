@@ -1,5 +1,9 @@
 @echo off
 
+rem if you see this, you downloaded this file as utf-8 with a byte order marker!
+
+@echo off
+
 setlocal enableextensions enabledelayedexpansion
 
 set msdownloadpath=https://download.microsoft.com/
@@ -189,4 +193,11 @@ download/2/9/2/2926E12F-4B0F-4C17-9044-869A6908C82E/Windows6.0-KB3177725-x86.msu
 download/8/8/A/88AFE5D4-0021-4384-9D64-5411257CCC5B/Windows8.1-KB3138615-x64.msu
 download/9/6/4/964EE585-03DC-441A-AA99-6A39BA731869/Windows8.1-KB3138615-x86.msu
 
+------------September Patches for Windows Vista and 7----------------
+
+download/E/1/6/E16C6588-378C-4E32-AE8E-00E0EEAA390F/Windows6.0-KB3185911-x86.msu
+download/8/E/5/8E5248EC-C0D6-4837-897B-C2CE426D6C88/Windows6.0-KB3185911-x64.msu
+
+download/6/E/8/6E884981-1D7B-4423-A845-56B805E59036/Windows6.1-KB3185911-x86.msu
+download/2/B/C/2BC5C880-2920-47F1-8A64-4B1F1C1A8737/Windows6.1-KB3185911-x64.msu
 
