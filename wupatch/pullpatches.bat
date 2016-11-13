@@ -15,8 +15,19 @@ set mydirname=%~dp0
 set wmicpath=%windir%\System32\wbem\wmic.exe
 set bitsadmin=%windir%\System32\bitsadmin.exe
 
-if not exist %wmicpath% (
+if not exist "%wmicpath%" (
     echo Error: Need wmic.exe to function properly...
+    goto :EOF
+)
+
+if NOT "X%~1"=="X" if "%~1" == "update" goto selfupdating
+if NOT "X%~1"=="X" if "%~1" == "version" (
+    echo %ppversion%
+    goto :EOF
+)
+
+if NOT "X%~1"=="X" (
+    echo Only parameter allowed is "update" or "version"
     goto :EOF
 )
 
@@ -70,7 +81,7 @@ if "%winversion%"=="windows8.1" (
 )
 
 set winarch=x86
-%wmicpath% COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
+"%wmicpath%" COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
 
 echo Windows architecture is: %winarch%
 echo .
@@ -99,7 +110,7 @@ echo Scanning Windows database for patches...(takes a minute)
 
 set foundlist=
 
-for /f "usebackq" %%a in (`%wmicpath% qfe get hotfixid ^| findstr "%patchlist%"`) do (
+for /f "usebackq" %%a in (`"%wmicpath%" qfe get hotfixid ^| findstr "%patchlist%"`) do (
     set foundlist=!foundlist! %%a
 )
 
@@ -182,7 +193,7 @@ if "X%pullurllocal%"=="X" (
 
 echo The download url is: %pullurl%
 
-if not exist %bitsadmin% (
+if not exist "%bitsadmin%" (
     echo Need bitsadmin.exe to download files so skipping this part
     goto :EOF
 )
@@ -202,7 +213,7 @@ if errorlevel 1 (
 
 echo Downloading patches into current directory
 
-%bitsadmin% /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
+"%bitsadmin%" /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
 
 echo Download complete. You can check the file is genuine in properties
 echo (right click file and click properties). Check the file has a digital
@@ -210,6 +221,53 @@ echo signatures tab and check the signature by highlighting one and clicking
 echo details.
 echo Then install the file by double clicking on it...
 echo.
+
+goto :EOF
+
+
+:selfupdating
+
+echo Attemping to update this batch file!
+
+if not exist "%bitsadmin%" (
+    echo But need bitsadmin.exe to download files so cannot do so...
+    goto :EOF
+)
+
+echo Current version: %ppversion%
+
+"%bitsadmin%" /transfer "Wantsomepatches" "%ppurl%" "%mydirname%pullpatches.new.bat"
+
+if not exist "%mydirname%pullpatches.new.bat" (
+    echo The download of pullpatches.new.bat did not happen
+    goto :EOF
+)
+
+set newppversion=
+
+for /F "usebackq" %%a in (`"%mydirname%pullpatches.new.bat" version`) do (
+    set newppversion=%%a
+)
+
+if "X%newppversion%"=="X" (
+    echo Something went wrong getting the version number!
+    goto :EOF
+)
+
+echo Downloaded version is version %newppversion%
+
+if %newppversion% LEQ %ppversion% (
+    echo There is no later version than the one you have
+    del %mydirname%pullpatches.new.bat
+    goto :EOF
+)
+
+echo Newer version discovered. Updating as nicely as possible...
+echo.
+(
+    cmd /C move /-Y "%mydirname%pullpatches.new.bat" "%mydirname%pullpatches.bat"
+    exit /B
+)
 
 goto :EOF
 
