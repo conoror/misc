@@ -15,7 +15,7 @@ set mydirname=%~dp0
 set wmicpath=%windir%\System32\wbem\wmic.exe
 set bitsadmin=%windir%\System32\bitsadmin.exe
 
-if not exist "%wmicpath%" (
+if not exist %wmicpath% (
     echo Error: Need wmic.exe to function properly...
     goto :EOF
 )
@@ -64,8 +64,8 @@ ver | find "6.3." > NUL && set winversion=Windows8.1
 
 if "X%winversion%"=="X" (
     echo .
-    echo Error: Windows is not 7 or 8.1
-    echo        Sorry, cannot do Vista or Windows 8.0
+    echo Error: Windows version is not 7 or 8.1
+    echo        This script cannot do Vista or Windows 8.0
     pause
     goto :EOF
 )
@@ -81,7 +81,7 @@ if "%winversion%"=="windows8.1" (
 )
 
 set winarch=x86
-"%wmicpath%" COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
+%wmicpath% COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
 
 echo Windows architecture is: %winarch%
 echo .
@@ -110,7 +110,7 @@ echo Scanning Windows database for patches...(takes a minute)
 
 set foundlist=
 
-for /f "usebackq" %%a in (`"%wmicpath%" qfe get hotfixid ^| findstr "%patchlist%"`) do (
+for /f "usebackq" %%a in (`%wmicpath% qfe get hotfixid ^| findstr "%patchlist%"`) do (
     set foundlist=!foundlist! %%a
 )
 
@@ -193,7 +193,7 @@ if "X%pullurllocal%"=="X" (
 
 echo The download url is: %pullurl%
 
-if not exist "%bitsadmin%" (
+if not exist %bitsadmin% (
     echo Need bitsadmin.exe to download files so skipping this part
     goto :EOF
 )
@@ -213,7 +213,7 @@ if errorlevel 1 (
 
 echo Downloading patches into current directory
 
-"%bitsadmin%" /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
+%bitsadmin% /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
 
 echo Download complete. You can check the file is genuine in properties
 echo (right click file and click properties). Check the file has a digital
@@ -229,14 +229,14 @@ goto :EOF
 
 echo Attemping to update this batch file!
 
-if not exist "%bitsadmin%" (
+if not exist %bitsadmin% (
     echo But need bitsadmin.exe to download files so cannot do so...
     goto :EOF
 )
 
 echo Current version: %ppversion%
 
-"%bitsadmin%" /transfer "Wantsomepatches" "%ppurl%" "%mydirname%pullpatches.new.bat"
+%bitsadmin% /transfer "Wantsomepatches" "%ppurl%" "%mydirname%pullpatches.new.bat"
 
 if not exist "%mydirname%pullpatches.new.bat" (
     echo The download of pullpatches.new.bat did not happen
@@ -258,7 +258,7 @@ echo Downloaded version is version %newppversion%
 
 if %newppversion% LEQ %ppversion% (
     echo There is no later version than the one you have
-    del %mydirname%pullpatches.new.bat
+    del "%mydirname%pullpatches.new.bat"
     goto :EOF
 )
 
