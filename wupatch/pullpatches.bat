@@ -1,72 +1,85 @@
 @echo off
-
-rem if you see this, you downloaded this file as utf-8 with a byte order marker!
-
 @echo off
+
+rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=5
+set ppversion=6
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
-set msdownloadpath=https://download.microsoft.com/
+set msdownloadpath=http://download.windowsupdate.com
 set mypathname=%~f0
 set mydirname=%~dp0
 set wmicpath=%windir%\System32\wbem\wmic.exe
 set bitsadmin=%windir%\System32\bitsadmin.exe
 
-if not exist %wmicpath% (
+if not exist "%wmicpath%" (
     echo Error: Need wmic.exe to function properly...
     goto :EOF
 )
 
-if NOT "X%~1"=="X" if "%~1" == "update" goto selfupdating
-if NOT "X%~1"=="X" if "%~1" == "version" (
+if not exist "%bitsadmin%" (
+    echo Error: Need bitsadmin.exe to download files
+    goto :EOF
+)
+
+if "X%~1"=="X" (
+    echo Patch checker, Conor O'Rourke 2016, Public domain
+    echo Original concept from: http://wu.krelay.de/en/ with
+    echo massive inputs from askwoody.com. Grateful thanks to both
+    echo.
+    echo Usage: Supply a single parameter to this script:
+    echo    check      Check and download updates
+    echo    help       More help
+    echo    updateme   Attempts to pull a new version of this script
+    echo    version    Prints the version number for use with update
+    echo.
+    goto :EOF
+)
+
+if "%~1"=="updateme" goto selfupdating
+if "%~1"=="version" (
     echo %ppversion%
     goto :EOF
 )
 
-if NOT "X%~1"=="X" (
-    echo Only parameter allowed is "update" or "version"
+if "%~1"=="help" (
+    echo This script checks to see if you have the July 2016 rollup
+    echo and its dependencies, the service stack updates. If you
+    echo do not, it offers to download them.
+    echo This will speed up the Windows Update search from hours
+    echo or even days to minutes.
+    echo If you do have this rollup, the script offers to download
+    echo any Security ONLY quality updates that are pending.
+    echo.
+    echo It is perfectly fine to run this script on a brand new
+    echo installation of Windows 7 SP1. After the July 2016 rollup
+    echo you should then scan for updates.
+    echo If you do not want telemetry and other monitoring software
+    echo from Microsoft, DO NOT select Security Monthly rollups:
+    echo.
+    echo     November, 2016 Security Monthly Quality Rollup...
+    echo.    ^^^^^^^^^^^ !!!NO NO NO!!! ^^^^^^^^^^^^^^^^^^^^^^
+    echo.
+    echo Right click and hide this update! Then install the rest
+    echo and then rerun this script to manually pull the security
+    echo only updates
+    echo.
     goto :EOF
 )
 
-echo Patch checker, Conor O'Rourke 2016, Public domain
-echo Patch lists from: http://wu.krelay.de/en/ with
-echo massive help from askwoody.com. Grateful thanks to both
-echo.
-echo This script checks to see if you have the July 2016 rollup
-echo and its dependencies (the service stack updates). If you
-echo do not, it offers to download them.
-echo This will speed up the Windows Update search from days to
-echo minutes.
-echo If you do have this rollup, the script offers to download
-echo the latest Security ONLY quality update.
-echo.
-echo It is perfectly fine to run this script on a brand new
-echo installation of Windows 7 SP1. You should then scan for
-echo updates and you will get about 70 results in the search.
-echo If you do not want telemetry and other ignorant software
-echo from Microsoft, DO NOT select Security Monthly rollups:
-echo.
-echo     "November, 2016 Security Monthly Quality Rollup..."
-echo.    ^^^^^^^^^^^ !!!NO NO NO!!! ^^^^^^^^^^^^^^^^^^^^^^^^
-echo.
-echo Right click and hide this update! Then install the rest
-echo and then rerun this script.
-echo .
-
-pause
+if NOT "%~1"=="check" (
+    echo Only parameters allowed are: check, update, version, help
+    goto :EOF
+)
 
 set winversion=
-ver | find "6.1." > NUL && set winversion=Windows6.1
-ver | find "6.3." > NUL && set winversion=Windows8.1
+ver | find "6.1." > NUL && set winversion=windows6.1
+ver | find "6.3." > NUL && set winversion=windows8.1
 
 if "X%winversion%"=="X" (
-    echo .
-    echo Error: Windows version is not 7 or 8.1
-    echo        This script cannot do Vista or Windows 8.0
-    pause
+    echo Error: Windows version is not 7 or 8.1. Sorry...
     goto :EOF
 )
 
@@ -81,15 +94,15 @@ if "%winversion%"=="windows8.1" (
 )
 
 set winarch=x86
-%wmicpath% COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
+"%wmicpath%" COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
 
 echo Windows architecture is: %winarch%
-echo .
+echo.
 echo Searching for patches
 
 set patchlist=
 
-for /F "usebackq delims=- tokens=6" %%a in (`findstr /R "^./download/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%"`) do (
+for /F "usebackq delims=- tokens=2" %%a in (`findstr /R "^/./msdownload/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%"`) do (
     set patchlist=!patchlist! %%a
 )
 
@@ -98,78 +111,79 @@ if "X%patchlist%"=="X" (
     goto :EOF
 )
 
-echo Patches %patchlist% | findstr "KB" > NUL
+echo Patches %patchlist% | findstr /I "kb" > NUL
 if errorlevel 1 (
     echo Problem with patchlist, possibly a scripting problem
     goto :EOF
 )
 
 echo Complete patchlist: %patchlist%
-
-echo Scanning Windows database for patches...(takes a minute)
+echo Scanning Windows database for patches...takes a minute...
 
 set foundlist=
 
-for /f "usebackq" %%a in (`%wmicpath% qfe get hotfixid ^| findstr "%patchlist%"`) do (
+for /f "usebackq" %%a in (`^""%wmicpath%" qfe get hotfixid ^| findstr /I "%patchlist%"^"`) do (
     set foundlist=!foundlist! %%a
 )
 
 echo Found patches: %foundlist%
 
+REM Start with the servicing stack prerequisites and filter them
+
+set sstacklist=kb3020369 kb3177467 kb3021910 kb3173424
+set ihavesspatch=
+set updatelist=
 set missinglist=
 
+for %%a in (%sstacklist%) do (
+    echo.%foundlist% | find /I "%%a" > NUL
+    if NOT errorlevel 1 set ihavesspatch=!ihavesspatch! %%a
+)
+
 for %%a in (%patchlist%) do (
-    echo Patch %foundlist% | find "%%a" > NUL
+    echo %sstacklist% | find /I "%%a" > NUL
+    if errorlevel 1 set updatelist=!updatelist! %%a
+)
+
+for %%a in (%updatelist%) do (
+    echo.%foundlist% | find /I "%%a" > NUL
     if errorlevel 1 set missinglist=!missinglist! %%a
 )
 
-set haveslist=
-set haverlist=
-set haveulist=
+REM Decide what to download next
 
-if "X%foundlist%" == "X" goto havenothing
+if "X%ihavesspatch%"=="X" (
+    echo You do not have any of the servicing stacks...
 
-for /F "usebackq" %%a in (`findstr /R "^./download/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%" ^| findstr /I "%foundlist%"`) do (
-    echo %%a | findstr /R "^U/download/" > NUL
-    if NOT errorlevel 1 set haveulist=%%a
-    echo %%a | findstr /R "^R/download/" > NUL
-    if NOT errorlevel 1 set haverlist=%%a
-    echo %%a | findstr /R "^S/download/" > NUL
-    if NOT errorlevel 1 set haveslist=%%a
-)
+    if "%winversion%"=="windows6.1" call :downloadfile kb3177467
+    if NOT "%winversion%"=="windows6.1" call :downloadfile kb3173424
 
-if NOT "X%haveulist%"=="X" (
-    echo You have the current Security only rollup. You're done!
     goto :EOF
 )
 
-if NOT "X%haverlist%"=="X" (
-    echo You have the July 2016 rollup. You need the current Security only rollup...
-    call :downloadfile U
+if "X%missinglist%"=="X" (
+    echo All current updates are present. You are done...
     goto :EOF
 )
 
-if NOT "X%haveslist%"=="X" (
-    echo You have one of the servicing stacks. You need the July 2016 rollup...
-    call :downloadfile R
-    goto :EOF
-)
-
-:havenothing
-
-echo You do not have anything so far. Start with the servicing stack...
-call :downloadfile S
+call :downloadfile %missinglist%
+echo Done
 goto :EOF
+
 
 
 :downloadfile
 
-if "X%missinglist%"=="X" (
-    echo All patches present! Should not happen!
+if "X%~1"=="X" (
+    echo Download file routine called with nothing to download
+    echo Oh dear....
     goto :EOF
 )
 
-for /F "usebackq" %%a in (`findstr /R "^%1/download/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%" ^| findstr /I "%missinglist%"`) do (
+echo Next patch to download is: %~1
+
+set pullurl=
+for /F "usebackq" %%a in (`findstr /R "^/./msdownload/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%" ^| findstr /I "%1"`) do (
     set pullurl=%%a
 )
 
@@ -178,12 +192,12 @@ if "X%pullurl%"=="X" (
     goto :EOF
 )
 
-set pullurl=%msdownloadpath%%pullurl:~2%
+set pullurl=%msdownloadpath%%pullurl%
 
 set pullurllocal=
 
-for /F "usebackq" %%a in (`echo %pullurl%`) do (
-    set pullurllocal=%%~nxa
+for /F "usebackq delims=_ tokens=1" %%A in (`echo %pullurl%`) do (
+    set pullurllocal=%%~nxA.msu
 )
 
 if "X%pullurllocal%"=="X" (
@@ -192,20 +206,11 @@ if "X%pullurllocal%"=="X" (
 )
 
 echo The download url is: %pullurl%
-
-if not exist %bitsadmin% (
-    echo Need bitsadmin.exe to download files so skipping this part
-    goto :EOF
-)
+echo Download to file: %pullurllocal%
 
 set /p downloadyn=Would you like me to download those patches for you?
 
-if "X%downloadyn%"=="X" (
-    echo Defaulting to No
-    goto :EOF
-)
-
-echo %downloadyn% | findstr /I "y" > NUL
+echo.%downloadyn% | findstr /I "y" > NUL
 if errorlevel 1 (
     echo That means no, exiting now
     goto :EOF
@@ -213,30 +218,35 @@ if errorlevel 1 (
 
 echo Downloading patches into current directory
 
-%bitsadmin% /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
+"%bitsadmin%" /transfer "Wantsomepatches" "%pullurl%" "%mydirname%%pullurllocal%"
 
-echo Download complete. You can check the file is genuine in properties
-echo (right click file and click properties). Check the file has a digital
+echo.
+echo Download complete. You can check the file is genuine in properties:
+echo Right click file and click properties, check the file has a digital
 echo signatures tab and check the signature by highlighting one and clicking
 echo details.
+echo.
 echo Then install the file by double clicking on it...
 echo.
 
+echo %1 | findstr /I "kb3172605 kb3172614" > NUL
+if NOT errorlevel 1 (
+    echo This is the July 2016 rollup.
+    echo You should scan for updates after install and reboot
+    echo If you do not want telemetry and other monitoring software
+    echo from Microsoft, DO NOT select Security Monthly rollups
+)
+
 goto :EOF
+
 
 
 :selfupdating
 
 echo Attemping to update this batch file!
-
-if not exist %bitsadmin% (
-    echo But need bitsadmin.exe to download files so cannot do so...
-    goto :EOF
-)
-
 echo Current version: %ppversion%
 
-%bitsadmin% /transfer "Wantsomepatches" "%ppurl%" "%mydirname%pullpatches.new.bat"
+"%bitsadmin%" /transfer "Wantsomepatches" "%ppurl%" "%mydirname%pullpatches.new.bat"
 
 if not exist "%mydirname%pullpatches.new.bat" (
     echo The download of pullpatches.new.bat did not happen
@@ -273,31 +283,47 @@ goto :EOF
 
 
 Windows database follows from this point. These are not valid batch commands!
+The http part is elided for brevity I suppose.
 
-Windows 7 Servicing stack and July rollup
+Servicing stack prerequisites, just need one of these
+-----------------------------------------------------
 
-S/download/C/0/8/C0823F43-BFE9-4147-9B0A-35769CBBE6B0/Windows6.1-KB3020369-x86.msu
-S/download/5/D/0/5D0821EB-A92D-4CA2-9020-EC41D56B074F/Windows6.1-KB3020369-x64.msu
-S/download/D/7/A/D7A954C7-DC1F-4339-99BC-CEFDC09A8661/Windows6.1-KB3177467-x86.msu
-S/download/2/4/7/247BDD8A-6AAE-4466-B137-3B2918D0CEAB/Windows6.1-KB3177467-x64.msu
+/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu
+/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x64_5393066469758e619f21731fc31ff2d109595445.msu
 
-R/download/5/6/0/560504D4-F91A-4DEB-867F-C713F7821374/Windows6.1-KB3172605-x64.msu
-R/download/C/D/5/CD5DE7B2-E857-4BD4-AA9C-6B30C3E1735A/Windows6.1-KB3172605-x86.msu
+/d/msdownload/update/software/crup/2016/08/windows6.1-kb3177467-x86_7fa40e58f6a8e56eb78b09502e5c8c6c1acf0158.msu
+/d/msdownload/update/software/crup/2016/08/windows6.1-kb3177467-x64_42467e48b4cfeb44112d819f50b0557d4f9bbb2f.msu
 
-Windows 8.1 Servicing stack and July rollup
+/c/msdownload/update/software/updt/2015/04/windows8.1-kb3021910-x86_7e70173bec00c3d4fe3b0b8cba17b095b4ed2d20.msu
+/c/msdownload/update/software/updt/2015/04/windows8.1-kb3021910-x64_e291c0c339586e79c36ebfc0211678df91656c3d.msu
 
-S/download/2/B/8/2B832205-A313-45A4-9356-DF5E47B70663/Windows8.1-KB3021910-x86.msu
-S/download/6/1/5/615B8D87-A02C-485E-B9B5-D6F4AEB52D78/Windows8.1-KB3021910-x64.msu
-S/download/4/5/F/45F8AA2A-1C72-460A-B9E9-83D3966DDA46/Windows8.1-KB3173424-x86.msu
-S/download/D/B/4/DB4B93B5-5E6B-4FC4-85A9-0C0FC82DF07F/Windows8.1-KB3173424-x64.msu
+/d/msdownload/update/software/crup/2016/06/windows8.1-kb3173424-x86_fcf7142a388a08fde7c54f23e84450f18a8aaec5.msu
+/d/msdownload/update/software/crup/2016/06/windows8.1-kb3173424-x64_9a1c9e0082978d92abee71f2cfed5e0f4b6ce85c.msu
 
-R/download/E/5/8/E5864645-6391-4D75-BB2C-7D7F05EF7D13/Windows8.1-KB3172614-x86.msu
-R/download/3/0/D/30DB904F-EA28-4CE9-A4C8-1BD660D43607/Windows8.1-KB3172614-x64.msu
 
-Windows Security only Updates (October)
+July 2016 Rollup: 3172605 for W7, 3172614 for W8.1
+--------------------------------------------------
 
-U/download/3/3/B/33B629EC-C0A9-4A33-B2B1-23C6E3FE46F1/Windows6.1-KB3192391-x86.msu
-U/download/A/6/8/A6891813-73D9-4326-994A-F2ED2E9776FD/Windows6.1-KB3192391-x64.msu
-U/download/B/B/7/BB798446-200E-4F36-8602-F5C7226E5B45/Windows8.1-KB3192392-x86.msu
-U/download/4/5/E/45E91587-52DA-4760-AFD1-1BC742026DF0/Windows8.1-KB3192392-x64.msu
+/d/msdownload/update/software/updt/2016/09/windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu
+/d/msdownload/update/software/updt/2016/09/windows6.1-kb3172605-x64_2bb9bc55f347eee34b1454b50c436eb6fd9301fc.msu
+/c/msdownload/update/software/updt/2016/07/windows8.1-kb3172614-x86_d11c233c8598b734de72665e0d0a3f2ef007b91f.msu
+/c/msdownload/update/software/updt/2016/07/windows8.1-kb3172614-x64_e41365e643b98ab745c21dba17d1d3b6bb73cfcc.msu
+
+
+Security only Updates for October 2016: 3192391 for W7, 3192392 for W8.1
+------------------------------------------------------------------------
+
+/d/msdownload/update/software/secu/2016/10/windows6.1-kb3192391-x86_a9d1e3f0dea012e3a331930bc1cd975005827cb6.msu
+/d/msdownload/update/software/secu/2016/10/windows6.1-kb3192391-x64_8acd94d8d268a6507c2852b0d9917f4ae1349b6c.msu
+/d/msdownload/update/software/secu/2016/10/windows8.1-kb3192392-x86_e585ffbfd1059b9b2c3a1c89da3b316145dc9d36.msu
+/c/msdownload/update/software/secu/2016/10/windows8.1-kb3192392-x64_2438d75e9a0f6e38e61f992e70c832bc706a2b27.msu
+
+
+Security only Updates for November 2016: 3197867 for W7, 3197873 for W8.1
+-------------------------------------------------------------------------
+
+/c/msdownload/update/software/secu/2016/11/windows6.1-kb3197867-x86_2313232edda5cca08115455d91120ab3790896ba.msu
+/c/msdownload/update/software/secu/2016/11/windows6.1-kb3197867-x64_6f8f45a5706eeee8ac05aa16fa91c984a9edb929.msu
+/c/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x86_b906109f30b735290a431fdc8397249cfcc3e84b.msu
+/d/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x64_cd0325f40c0d25960e462946f6b736aa7c0ed674.msu
 

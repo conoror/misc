@@ -1,4 +1,9 @@
-Note that this batch file is undergoing change and is not quite ready.
+This is a batch file that will check:
+  - For the service stack updates
+  - For the July 2016 rollup
+  - For subsequent security only rollups
 
-I've just realised that the monthly security patches are not cumulative.
-You have to install each one from October. This will entail some file changes. Sigh, I should have used vbscript...
+and download the next patch you should install. As this is a batch
+file it needs to be run from a cmd prompt. Just run it to get
+help.
+
