@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=6
+set ppversion=7
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -326,4 +326,13 @@ Security only Updates for November 2016: 3197867 for W7, 3197873 for W8.1
 /c/msdownload/update/software/secu/2016/11/windows6.1-kb3197867-x64_6f8f45a5706eeee8ac05aa16fa91c984a9edb929.msu
 /c/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x86_b906109f30b735290a431fdc8397249cfcc3e84b.msu
 /d/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x64_cd0325f40c0d25960e462946f6b736aa7c0ed674.msu
+
+
+Security only Updates for December 2016: 3205394 for W7, 3205400 for W8.1
+-------------------------------------------------------------------------
+
+/d/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x86_e477192f301b1fbafc98deb94af80c6e94231e54.msu
+/c/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x64_71d0c657d24bc852f074996c32987fb936c07774.msu
+/c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x86_4529e446e7e929ee665579bdd5c23aa091ab862e.msu
+/c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x64_ad92909c51b52a6890932a8c5bd32059a102ec65.msu
 
