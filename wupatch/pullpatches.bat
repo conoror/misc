@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=7
+set ppversion=8
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -70,7 +70,7 @@ if "%~1"=="help" (
 )
 
 if NOT "%~1"=="check" (
-    echo Only parameters allowed are: check, update, version, help
+    echo Only parameters allowed are: check, updateme, version, help
     goto :EOF
 )
 
@@ -335,4 +335,10 @@ Security only Updates for December 2016: 3205394 for W7, 3205400 for W8.1
 /c/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x64_71d0c657d24bc852f074996c32987fb936c07774.msu
 /c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x86_4529e446e7e929ee665579bdd5c23aa091ab862e.msu
 /c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x64_ad92909c51b52a6890932a8c5bd32059a102ec65.msu
+
+Security only Updates for January 2017: 3212642 for W7, Nothing for W8.1!
+-------------------------------------------------------------------------
+
+/c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x86_d5906af5f1f0dc07a5239311b169619ce255ab12.msu
+/c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x64_f3633176091129fc428d899c93545bdc7821e689.msu
 
