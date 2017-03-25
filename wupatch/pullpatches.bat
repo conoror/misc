@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=8
+set ppversion=9
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -25,7 +25,7 @@ if not exist "%bitsadmin%" (
 )
 
 if "X%~1"=="X" (
-    echo Patch checker, Conor O'Rourke 2016, Public domain
+    echo Patch checker, Conor O'Rourke 2017, Public domain
     echo Original concept from: http://wu.krelay.de/en/ with
     echo massive inputs from askwoody.com. Grateful thanks to both
     echo.
@@ -102,8 +102,11 @@ echo Searching for patches
 
 set patchlist=
 
-for /F "usebackq delims=- tokens=2" %%a in (`findstr /R "^/./msdownload/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%"`) do (
-    set patchlist=!patchlist! %%a
+for /F "usebackq delims=- tokens=2,3" %%a in (`findstr /R "^/./msdownload/" "%mypathname%" ^| findstr /I "%winversion%" ^| findstr /I "%winarch%"`) do (
+    set patchname=%%a
+    echo.!patchname! | findstr /I /R "^kb" > NUL
+    if errorlevel 1 set patchname=%%b
+    set patchlist=!patchlist! !patchname!
 )
 
 if "X%patchlist%"=="X" (
@@ -336,9 +339,23 @@ Security only Updates for December 2016: 3205394 for W7, 3205400 for W8.1
 /c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x86_4529e446e7e929ee665579bdd5c23aa091ab862e.msu
 /c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x64_ad92909c51b52a6890932a8c5bd32059a102ec65.msu
 
+
 Security only Updates for January 2017: 3212642 for W7, Nothing for W8.1!
 -------------------------------------------------------------------------
 
 /c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x86_d5906af5f1f0dc07a5239311b169619ce255ab12.msu
 /c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x64_f3633176091129fc428d899c93545bdc7821e689.msu
+
+
+Internet Explorer Updates for March 2017: 4012204 for W7 and W8.1
+-----------------------------------------------------------------
+
+/c/msdownload/update/software/secu/2017/03/ie11-windows6.1-kb4012204-x86_2b838f796df8df5580ba59d41b54ba6a86d6a84a.msu
+/c/msdownload/update/software/secu/2017/03/ie11-windows6.1-kb4012204-x64_aae120b92b516044b82e6462288521e8974f8e2e.msu
+/d/msdownload/update/software/secu/2017/03/windows8.1-kb4012204-x86_31403fe49a5bfe417dddbd750c24b68a22570434.msu
+/c/msdownload/update/software/secu/2017/03/windows8.1-kb4012204-x64_3b27897530331606af7cef124b440bde3f1db675.msu
+
+
+Security only Updates for March 2017: 4012212 for W7, 4012213 for W8.1
+-------------------------------------------------------------------------
 
