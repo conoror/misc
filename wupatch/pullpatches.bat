@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=9
+set ppversion=10
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -358,4 +358,9 @@ Internet Explorer Updates for March 2017: 4012204 for W7 and W8.1
 
 Security only Updates for March 2017: 4012212 for W7, 4012213 for W8.1
 -------------------------------------------------------------------------
+
+/d/msdownload/update/software/secu/2017/02/windows6.1-kb4012212-x86_6bb04d3971bb58ae4bac44219e7169812914df3f.msu
+/d/msdownload/update/software/secu/2017/02/windows6.1-kb4012212-x64_2decefaa02e2058dcd965702509a992d8c4e92b3.msu
+/c/msdownload/update/software/secu/2017/02/windows8.1-kb4012213-x86_e118939b397bc983971c88d9c9ecc8cbec471b05.msu
+/c/msdownload/update/software/secu/2017/02/windows8.1-kb4012213-x64_5b24b9ca5a123a844ed793e0f2be974148520349.msu
 
