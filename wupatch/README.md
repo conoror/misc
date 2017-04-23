@@ -1,3 +1,6 @@
+As I'm the only one using this program, I've filtered all support
+except for Windows 7 64 bit!
+
 This is a batch file that will check:
   - For the service stack updates
   - For the July 2016 rollup

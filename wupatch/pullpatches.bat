@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=10
+set ppversion=11
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -25,9 +25,7 @@ if not exist "%bitsadmin%" (
 )
 
 if "X%~1"=="X" (
-    echo Patch checker, Conor O'Rourke 2017, Public domain
-    echo Original concept from: http://wu.krelay.de/en/ with
-    echo massive inputs from askwoody.com. Grateful thanks to both
+    echo Windows 7 64 bit Patch checker, Conor O'Rourke 2017, Public domain
     echo.
     echo Usage: Supply a single parameter to this script:
     echo    check      Check and download updates
@@ -74,29 +72,24 @@ if NOT "%~1"=="check" (
     goto :EOF
 )
 
-set winversion=
+set winversion=None
 ver | find "6.1." > NUL && set winversion=windows6.1
-ver | find "6.3." > NUL && set winversion=windows8.1
 
-if "X%winversion%"=="X" (
-    echo Error: Windows version is not 7 or 8.1. Sorry...
+if NOT "%winversion%"=="windows6.1" (
+    echo Error: You are not using Windows 7
     goto :EOF
-)
-
-if "%winversion%"=="windows6.1" (
-    echo Using Windows 7 and following the guide at:
-    echo    https://support.microsoft.com/en-us/help/22801
-)
-
-if "%winversion%"=="windows8.1" (
-    echo Using Windows 8.1 and following the guide at:
-    echo    https://support.microsoft.com/en-gb/help/24717
 )
 
 set winarch=x86
 "%wmicpath%" COMPUTERSYSTEM GET SystemType | find /i "x64" > NUL && set winarch=x64
 
-echo Windows architecture is: %winarch%
+if NOT "%winarch%"=="x64" (
+    echo Error: You are not using Windows 7 64 bit
+    goto :EOF
+)
+
+echo Using Windows 7 64 bit and following the guide at:
+echo    https://support.microsoft.com/en-us/help/22801
 echo.
 echo Searching for patches
 
@@ -129,11 +122,9 @@ for /f "usebackq" %%a in (`^""%wmicpath%" qfe get hotfixid ^| findstr /I "%patch
     set foundlist=!foundlist! %%a
 )
 
-echo Found patches: %foundlist%
-
 REM Start with the servicing stack prerequisites and filter them
 
-set sstacklist=kb3020369 kb3177467 kb3021910 kb3173424
+set sstacklist=kb3020369 kb3177467
 set ihavesspatch=
 set updatelist=
 set missinglist=
@@ -157,10 +148,7 @@ REM Decide what to download next
 
 if "X%ihavesspatch%"=="X" (
     echo You do not have any of the servicing stacks...
-
-    if "%winversion%"=="windows6.1" call :downloadfile kb3177467
-    if NOT "%winversion%"=="windows6.1" call :downloadfile kb3173424
-
+    call :downloadfile kb3177467
     goto :EOF
 )
 
@@ -169,6 +157,7 @@ if "X%missinglist%"=="X" (
     goto :EOF
 )
 
+echo You are missing: %missinglist%
 call :downloadfile %missinglist%
 echo Done
 goto :EOF
@@ -291,76 +280,31 @@ The http part is elided for brevity I suppose.
 Servicing stack prerequisites, just need one of these
 -----------------------------------------------------
 
-/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu
 /d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x64_5393066469758e619f21731fc31ff2d109595445.msu
-
-/d/msdownload/update/software/crup/2016/08/windows6.1-kb3177467-x86_7fa40e58f6a8e56eb78b09502e5c8c6c1acf0158.msu
 /d/msdownload/update/software/crup/2016/08/windows6.1-kb3177467-x64_42467e48b4cfeb44112d819f50b0557d4f9bbb2f.msu
 
-/c/msdownload/update/software/updt/2015/04/windows8.1-kb3021910-x86_7e70173bec00c3d4fe3b0b8cba17b095b4ed2d20.msu
-/c/msdownload/update/software/updt/2015/04/windows8.1-kb3021910-x64_e291c0c339586e79c36ebfc0211678df91656c3d.msu
 
-/d/msdownload/update/software/crup/2016/06/windows8.1-kb3173424-x86_fcf7142a388a08fde7c54f23e84450f18a8aaec5.msu
-/d/msdownload/update/software/crup/2016/06/windows8.1-kb3173424-x64_9a1c9e0082978d92abee71f2cfed5e0f4b6ce85c.msu
+July 2016 Rollup: KB3172605
+---------------------------
 
-
-July 2016 Rollup: 3172605 for W7, 3172614 for W8.1
---------------------------------------------------
-
-/d/msdownload/update/software/updt/2016/09/windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu
 /d/msdownload/update/software/updt/2016/09/windows6.1-kb3172605-x64_2bb9bc55f347eee34b1454b50c436eb6fd9301fc.msu
-/c/msdownload/update/software/updt/2016/07/windows8.1-kb3172614-x86_d11c233c8598b734de72665e0d0a3f2ef007b91f.msu
-/c/msdownload/update/software/updt/2016/07/windows8.1-kb3172614-x64_e41365e643b98ab745c21dba17d1d3b6bb73cfcc.msu
 
 
-Security only Updates for October 2016: 3192391 for W7, 3192392 for W8.1
-------------------------------------------------------------------------
+Security only Updates for Oct,Nov,Dec 2016
+------------------------------------------
 
-/d/msdownload/update/software/secu/2016/10/windows6.1-kb3192391-x86_a9d1e3f0dea012e3a331930bc1cd975005827cb6.msu
 /d/msdownload/update/software/secu/2016/10/windows6.1-kb3192391-x64_8acd94d8d268a6507c2852b0d9917f4ae1349b6c.msu
-/d/msdownload/update/software/secu/2016/10/windows8.1-kb3192392-x86_e585ffbfd1059b9b2c3a1c89da3b316145dc9d36.msu
-/c/msdownload/update/software/secu/2016/10/windows8.1-kb3192392-x64_2438d75e9a0f6e38e61f992e70c832bc706a2b27.msu
-
-
-Security only Updates for November 2016: 3197867 for W7, 3197873 for W8.1
--------------------------------------------------------------------------
-
-/c/msdownload/update/software/secu/2016/11/windows6.1-kb3197867-x86_2313232edda5cca08115455d91120ab3790896ba.msu
 /c/msdownload/update/software/secu/2016/11/windows6.1-kb3197867-x64_6f8f45a5706eeee8ac05aa16fa91c984a9edb929.msu
-/c/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x86_b906109f30b735290a431fdc8397249cfcc3e84b.msu
-/d/msdownload/update/software/secu/2016/11/windows8.1-kb3197873-x64_cd0325f40c0d25960e462946f6b736aa7c0ed674.msu
-
-
-Security only Updates for December 2016: 3205394 for W7, 3205400 for W8.1
--------------------------------------------------------------------------
-
-/d/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x86_e477192f301b1fbafc98deb94af80c6e94231e54.msu
 /c/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x64_71d0c657d24bc852f074996c32987fb936c07774.msu
-/c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x86_4529e446e7e929ee665579bdd5c23aa091ab862e.msu
-/c/msdownload/update/software/secu/2016/11/windows8.1-kb3205400-x64_ad92909c51b52a6890932a8c5bd32059a102ec65.msu
 
 
-Security only Updates for January 2017: 3212642 for W7, Nothing for W8.1!
--------------------------------------------------------------------------
+Security only and IE11 only Updates for Jan,Mar,Apr 2017
+--------------------------------------------------------
 
-/c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x86_d5906af5f1f0dc07a5239311b169619ce255ab12.msu
 /c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x64_f3633176091129fc428d899c93545bdc7821e689.msu
-
-
-Internet Explorer Updates for March 2017: 4012204 for W7 and W8.1
------------------------------------------------------------------
-
-/c/msdownload/update/software/secu/2017/03/ie11-windows6.1-kb4012204-x86_2b838f796df8df5580ba59d41b54ba6a86d6a84a.msu
-/c/msdownload/update/software/secu/2017/03/ie11-windows6.1-kb4012204-x64_aae120b92b516044b82e6462288521e8974f8e2e.msu
-/d/msdownload/update/software/secu/2017/03/windows8.1-kb4012204-x86_31403fe49a5bfe417dddbd750c24b68a22570434.msu
-/c/msdownload/update/software/secu/2017/03/windows8.1-kb4012204-x64_3b27897530331606af7cef124b440bde3f1db675.msu
-
-
-Security only Updates for March 2017: 4012212 for W7, 4012213 for W8.1
--------------------------------------------------------------------------
-
-/d/msdownload/update/software/secu/2017/02/windows6.1-kb4012212-x86_6bb04d3971bb58ae4bac44219e7169812914df3f.msu
 /d/msdownload/update/software/secu/2017/02/windows6.1-kb4012212-x64_2decefaa02e2058dcd965702509a992d8c4e92b3.msu
-/c/msdownload/update/software/secu/2017/02/windows8.1-kb4012213-x86_e118939b397bc983971c88d9c9ecc8cbec471b05.msu
-/c/msdownload/update/software/secu/2017/02/windows8.1-kb4012213-x64_5b24b9ca5a123a844ed793e0f2be974148520349.msu
+/c/msdownload/update/software/secu/2017/03/ie11-windows6.1-kb4012204-x64_aae120b92b516044b82e6462288521e8974f8e2e.msu
+
+/d/msdownload/update/software/secu/2017/04/ie11-windows6.1-kb4014661-x64_6538ca325f6fd30c72c8fa375cbaf47a9adbab5b.msu
+/c/msdownload/update/software/secu/2017/03/windows6.1-kb4015546-x64_4ff5653990d74c465d48adfba21aca6453be99aa.msu
 
