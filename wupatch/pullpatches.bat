@@ -5,7 +5,7 @@ rem Two echo offs just in case UTF-8 with byte order marker (github...)
 
 setlocal enableextensions enabledelayedexpansion
 
-set ppversion=14
+set ppversion=15
 set ppurl=https://raw.githubusercontent.com/conoror/misc/master/wupatch/pullpatches.bat
 
 set msdownloadpath=http://download.windowsupdate.com
@@ -298,7 +298,7 @@ Security only Updates for Oct,Nov,Dec 2016
 /c/msdownload/update/software/secu/2016/12/windows6.1-kb3205394-x64_71d0c657d24bc852f074996c32987fb936c07774.msu
 
 
-Security only Updates for Jan-Jun 2017
+Security only Updates for Jan-Jul 2017
 --------------------------------------
 
 /c/msdownload/update/software/secu/2017/01/windows6.1-kb3212642-x64_f3633176091129fc428d899c93545bdc7821e689.msu
@@ -306,11 +306,12 @@ Security only Updates for Jan-Jun 2017
 /c/msdownload/update/software/secu/2017/03/windows6.1-kb4015546-x64_4ff5653990d74c465d48adfba21aca6453be99aa.msu
 /c/msdownload/update/software/secu/2017/05/windows6.1-kb4019263-x64_d64d8b6f91434754fdd2a552d8732c95a6e64f30.msu
 /c/msdownload/update/software/secu/2017/06/windows6.1-kb4022722-x64_ee5b5fae02d1c48dbd94beaff4d3ee4fe3cd2ac2.msu
-
-
-Security only and IE11 (IE is cumulative) Updates for July 2017
----------------------------------------------------------------
-
-/c/msdownload/update/software/secu/2017/07/ie11-windows6.1-kb4025252-x64_80edf86dd6b82f99214b6de9230c481b70995bd1.msu
 /c/msdownload/update/software/secu/2017/07/windows6.1-kb4025337-x64_c013b7fcf3486a0f71c4f58fc361bfdb715c4e94.msu
+
+
+Security only and IE11 (IE is cumulative) Updates for August 2017
+-----------------------------------------------------------------
+
+/c/msdownload/update/software/secu/2017/07/ie11-windows6.1-kb4034733-x64_f2e92d2ce145e064731ce72cf2d10910d81a50ff.msu
+/c/msdownload/update/software/secu/2017/07/windows6.1-kb4034679-x64_ccabab6aefd6c16454fac39163ae5abc2f4f1303.msu
 
